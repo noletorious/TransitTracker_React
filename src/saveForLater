@@ -1,0 +1,85 @@
+        //create new array allArrivals
+        let allArrivals = [];
+        //for each arrival, push the shortSigns
+        for (var i = 0; i < arrivalsObj.length; i++) {
+          allArrivals.push(arrivalsObj[i].shortSign);
+        }
+        //get uniqueArrivals from allArrivals and set to unique objects under the arrivals array
+        let uniqueArrivals = [...new Set(allArrivals)];
+        //spread only unique shortSigns into new array
+        let sortedUniqueArrivals = uniqueArrivals.sort((a, b) => {
+          let first = a.substring(0, a.indexOf(" "));
+          let second = b.substring(0, b.indexOf(" "));
+          return first - second;
+        });
+
+        //uniqueArrivals but with objects    
+        let differentArrivals = [];
+        //for every unique array, push it as it's own object 
+        for (var d = 0; d < sortedUniqueArrivals.length; d++) {
+          // new Object({
+          //   service: sortedUniqueArrivals[d],
+          //   estimatedArrivals: []
+          // })
+          let uniqueArrival = {
+            service: sortedUniqueArrivals[d],
+            estimatedArrivals: []
+          };
+          differentArrivals.push(uniqueArrival)
+        }
+        this.setState({
+          arrivals: [...differentArrivals],
+        })
+        //nest each arrival under the corresponding/matching uniqueArrival array
+        //make a copy of all the arrivals, get each vehicle info 
+        let allTimeArrivals = [];
+        for (var t = 0; t < arrivalsObj.length; t++) {
+          let arrivalStatus = "";
+          let estArrivalTime = null;
+          if (arrivalsObj[t].status === "estimated") {
+            arrivalStatus = arrivalsObj[t].status;
+            estArrivalTime = arrivalsObj[t].estimated;
+          }
+          if (arrivalsObj[t].status === "scheduled") {
+            arrivalStatus = arrivalsObj[t].status;
+            estArrivalTime = arrivalsObj[t].scheduled;
+          }
+
+          allTimeArrivals.push({
+            vehicle: arrivalsObj[t].shortSign,
+            estimated: estArrivalTime,
+            status: arrivalStatus
+          });
+        }
+        //in the payload, store each vehicle arrival their respective service lines
+        this.state.arrivals.forEach((s) => {
+          allTimeArrivals.forEach((i) => {
+            if (i.vehicle === s.service) {
+
+              let estArrivalMinFunc = () => {
+                if (i.status === 'scheduled') {
+                  return null;
+                }
+                if (i.status === 'estimated') {
+                  let timeDiffms = i.estimated - queryTime;
+                  let duration = moment.duration(timeDiffms).minutes();
+                  return duration;
+                }
+              }
+
+              let matchingArrivals = [];
+
+              matchingArrivals.push({
+                vehicle: i.vehicle,
+                estimated: moment(i.estimated).tz("America/Los_Angeles").format('hh:mm A'),
+                estArrivalMin: estArrivalMinFunc(),
+                status: i.status
+              });
+              //sort the times in decsending order
+              matchingArrivals.sort((a, b) => a.estimated.localeCompare(b.estimated) || a.estimated.localeCompare(b.estimated));
+              s.estimatedArrivals.push(...matchingArrivals);
+              //console.log(matchingArrivals)
+            }
+          })
+        })
+        //end setState
