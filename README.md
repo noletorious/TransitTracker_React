@@ -1,4 +1,6 @@
-Usings TriMets API to display transit tracker information in the way people want. 
+Usings TriMets API to display transit tracker information in the way people want.
+
+http://trimet-transit-tracker-react.herokuapp.com/
 
 ### Built with:
 
